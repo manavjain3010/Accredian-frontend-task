@@ -1,9 +1,9 @@
 import './App.css'
 import Benefits from './components/Benefits'
 import HeroSection from './components/HeroSection'
-import Navbar from './components/Navbar'
+import Navbar from './components/Layout/Navbar'
 import FAQ from './components/FAQ'
-import Footer from './components/Footer'
+import Footer from './components/Layout/Footer'
 import { useState } from 'react';
 import LoginForm from './components/LoginForm';
 import ReferralForm from './components/ReferralForm';

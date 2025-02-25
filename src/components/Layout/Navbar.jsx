@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import LoginForm from './LoginForm';
+import LoginForm from '../LoginForm';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

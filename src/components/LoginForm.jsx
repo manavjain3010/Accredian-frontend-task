@@ -1,5 +1,25 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { 
+  Box,
+  TextField,
+  Button,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Typography,
+  createTheme,
+  ThemeProvider
+} from '@mui/material';
+import { Close, Lock, AccountCircle } from '@mui/icons-material';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#7c3aed',
+    },
+  },
+});
 
 export default function LoginForm({ onClose }) {
   const [formData, setFormData] = useState({
@@ -9,7 +29,6 @@ export default function LoginForm({ onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your login logic here
     console.log('Login attempt:', formData);
   };
 
@@ -21,55 +40,81 @@ export default function LoginForm({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full m-4 relative z-50">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Login</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            ✕
-          </button>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
-              <input
-                id="email"
+    <ThemeProvider theme={theme}>
+      <Dialog open={true} onClose={onClose} maxWidth="md">
+        <Box sx={{ display: 'flex', height: 500 }}>
+          {/* Left Side - Image */}
+          <Box sx={{
+            width: '40%',
+            backgroundImage: 'url(https://source.unsplash.com/random/800x600?nature)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            borderTopLeftRadius: 8,
+            borderBottomLeftRadius: 8
+          }} />
+          
+          {/* Right Side - Form */}
+          <Box sx={{ p: 4, width: '60%', position: 'relative' }}>
+            <IconButton
+              onClick={onClose}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <Close />
+            </IconButton>
+
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Lock color="primary" sx={{ fontSize: 40 }} />
+              <Typography variant="h5" component="h2" sx={{ mt: 2 }}>
+                Welcome Back
+              </Typography>
+              <Typography color="text.secondary">
+                Please sign in to continue
+              </Typography>
+            </Box>
+
+            <form onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Email Address"
                 name="email"
                 type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                variant="outlined"
+                InputProps={{
+                  startAdornment: <AccountCircle sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.email}
                 onChange={handleChange}
               />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
+              
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Password"
                 name="password"
                 type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                variant="outlined"
+                InputProps={{
+                  startAdornment: <Lock sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.password}
                 onChange={handleChange}
               />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              Sign in
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <Button
+                fullWidth
+                type="submit"
+                variant="contained"
+                size="large"
+                sx={{ mt: 3, py: 1.5, borderRadius: 2 }}
+              >
+                Sign In
+              </Button>
+            </form>
+          </Box>
+        </Box>
+      </Dialog>
+    </ThemeProvider>
   );
 }
 

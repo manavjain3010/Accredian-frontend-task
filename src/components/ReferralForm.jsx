@@ -1,132 +1,444 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { 
+  Box,
+  TextField,
+  Button,
+  Dialog,
+  IconButton,
+  Typography,
+  createTheme,
+  ThemeProvider,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Stepper,
+  Step,
+  StepLabel,
+  Alert,
+  Slide,
+  LinearProgress,
+  Snackbar
+} from '@mui/material';
+import { 
+  Close, 
+  Email, 
+  Phone, 
+  Person, 
+  Work, 
+  School,
+  ArrowForward,
+  ArrowBack
+} from '@mui/icons-material';
+import { FaHandshake } from 'react-icons/fa';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#7c3aed',
+    },
+    secondary: {
+      main: '#4f46e5',
+    },
+  },
+});
+
+const programs = [
+  'Full Stack Development',
+  'Data Science',
+  'UI/UX Design',
+  'Cloud Computing',
+  'Cybersecurity',
+  'AI/ML'
+];
+
+const steps = ['Referrer Details', 'Referee Details'];
 
 export default function ReferralForm({ onClose }) {
+  const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     referrerName: '',
     referrerEmail: '',
     referrerPhone: '',
     refereeName: '',
     refereeEmail: '',
-    refereePhone: ''
+    refereePhone: '',
+    fieldOfWork: '',
+    program: ''
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const validateStep = (step) => {
+    const newErrors = {};
+    const emailRegex = /\S+@\S+\.\S+/;
+    
+    if (step === 0) {
+      if (!formData.referrerName?.trim()) {
+        newErrors.referrerName = 'Referrer Name is required';
+      }
+      if (!formData.referrerEmail?.trim()) {
+        newErrors.referrerEmail = 'Referrer Email is required';
+      } else if (!emailRegex.test(formData.referrerEmail)) {
+        newErrors.referrerEmail = 'Invalid email format';
+      }
+    } else if (step === 1) {
+      if (!formData.refereeName?.trim()) {
+        newErrors.refereeName = 'Referee Name is required';
+      }
+      if (!formData.refereeEmail?.trim()) {
+        newErrors.refereeEmail = 'Referee Email is required';
+      } else if (!emailRegex.test(formData.refereeEmail)) {
+        newErrors.refereeEmail = 'Invalid email format';
+      }
+      if (!formData.fieldOfWork?.trim()) {
+        newErrors.fieldOfWork = 'Field of Work is required';
+      }
+      if (!formData.program) {
+        newErrors.program = 'Program is required';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(activeStep)) {
+      setActiveStep((prev) => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your referral logic here
-    console.log('Referral details:', formData);
+    if (!validateStep(activeStep)) return;
+
+    // Validate all fields before submission
+    const allFieldsValid = validateStep(0) && validateStep(1);
+    if (!allFieldsValid) {
+      setSubmitError('Please fill in all required fields correctly');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+    setSuccessMessage('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/referrals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          referrerName: formData.referrerName.trim(),
+          referrerEmail: formData.referrerEmail.trim(),
+          referrerPhone: formData.referrerPhone?.trim(),
+          refereeName: formData.refereeName.trim(),
+          refereeEmail: formData.refereeEmail.trim(),
+          refereePhone: formData.refereePhone?.trim(),
+          fieldOfWork: formData.fieldOfWork.trim(),
+          program: formData.program
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit referral");
+      }
+
+      setSuccessMessage('Referral submitted successfully! Confirmation emails have been sent.');
+      console.log('Referral submitted successfully:', data);
+      
+      // Close the form after 2 seconds
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Error submitting referral:', error);
+      setSubmitError(error.message || 'Failed to submit referral. Please try again.');
+      // If there's a validation error, go back to the relevant step
+      if (error.message.includes('Referrer')) {
+        setActiveStep(0);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full m-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Referral Details</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            ✕
-          </button>
-        </div>
-        <form className="mt-4 space-y-6" onSubmit={handleSubmit}>
-          {/* Referrer Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Referrer Details</h3>
-            <div>
-              <label htmlFor="referrerName" className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                id="referrerName"
-                name="referrerName"
-                type="text"
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0:
+        return (
+          <Slide direction="left" in={activeStep === 0} mountOnEnter unmountOnExit>
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 2, mt: 1 }} color="primary">
+                Your Details
+              </Typography>
+              <TextField
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                fullWidth
+                margin="normal"
+                label="Your Name"
+                name="referrerName"
+                error={!!errors.referrerName}
+                helperText={errors.referrerName}
+                InputProps={{
+                  startAdornment: <Person sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.referrerName}
                 onChange={handleChange}
               />
-            </div>
-            <div>
-              <label htmlFor="referrerEmail" className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                id="referrerEmail"
+              <TextField
+                required
+                fullWidth
+                margin="normal"
+                label="Your Email"
                 name="referrerEmail"
                 type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                error={!!errors.referrerEmail}
+                helperText={errors.referrerEmail}
+                InputProps={{
+                  startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.referrerEmail}
                 onChange={handleChange}
               />
-            </div>
-            <div>
-              <label htmlFor="referrerPhone" className="block text-sm font-medium text-gray-700">Phone</label>
-              <input
-                id="referrerPhone"
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Your Phone"
                 name="referrerPhone"
-                type="tel"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                InputProps={{
+                  startAdornment: <Phone sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.referrerPhone}
                 onChange={handleChange}
               />
-            </div>
-          </div>
-
-          {/* Referee Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Referee Details</h3>
-            <div>
-              <label htmlFor="refereeName" className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                id="refereeName"
-                name="refereeName"
-                type="text"
+            </Box>
+          </Slide>
+        );
+      case 1:
+        return (
+          <Slide direction="left" in={activeStep === 1} mountOnEnter unmountOnExit>
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 2, mt: 1 }} color="primary">
+                Referee Details
+              </Typography>
+              <TextField
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                fullWidth
+                margin="normal"
+                label="Referee Name"
+                name="refereeName"
+                error={!!errors.refereeName}
+                helperText={errors.refereeName}
+                InputProps={{
+                  startAdornment: <Person sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.refereeName}
                 onChange={handleChange}
               />
-            </div>
-            <div>
-              <label htmlFor="refereeEmail" className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                id="refereeEmail"
+              <TextField
+                required
+                fullWidth
+                margin="normal"
+                label="Referee Email"
                 name="refereeEmail"
                 type="email"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                error={!!errors.refereeEmail}
+                helperText={errors.refereeEmail}
+                InputProps={{
+                  startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.refereeEmail}
                 onChange={handleChange}
               />
-            </div>
-            <div>
-              <label htmlFor="refereePhone" className="block text-sm font-medium text-gray-700">Phone</label>
-              <input
-                id="refereePhone"
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Referee Phone"
                 name="refereePhone"
-                type="tel"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                InputProps={{
+                  startAdornment: <Phone sx={{ mr: 1, color: 'action.active' }} />
+                }}
                 value={formData.refereePhone}
                 onChange={handleChange}
               />
-            </div>
-          </div>
+              <TextField
+                required
+                fullWidth
+                margin="normal"
+                label="Field of Work"
+                name="fieldOfWork"
+                error={!!errors.fieldOfWork}
+                helperText={errors.fieldOfWork}
+                InputProps={{
+                  startAdornment: <Work sx={{ mr: 1, color: 'action.active' }} />
+                }}
+                value={formData.fieldOfWork}
+                onChange={handleChange}
+              />
+              <FormControl fullWidth margin="normal" required error={!!errors.program}>
+                <InputLabel>Program</InputLabel>
+                <Select
+                  name="program"
+                  value={formData.program}
+                  onChange={handleChange}
+                  label="Program"
+                  startAdornment={<School sx={{ mr: 1, color: 'action.active' }} />}
+                >
+                  {programs.map((program) => (
+                    <MenuItem key={program} value={program}>
+                      {program}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.program && (
+                  <Typography color="error" variant="caption" sx={{ mt: 1, ml: 2 }}>
+                    {errors.program}
+                  </Typography>
+                )}
+              </FormControl>
+            </Box>
+          </Slide>
+        );
+      default:
+        return null;
+    }
+  };
 
-          <div>
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              Submit Referral
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+  return (
+    <ThemeProvider theme={theme}>
+      <Dialog 
+        open={true} 
+        onClose={onClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <IconButton
+            onClick={onClose}
+            sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}
+          >
+            <Close />
+          </IconButton>
+
+          {/* Header */}
+          <Box sx={{ 
+            bgcolor: 'primary.main', 
+            color: 'white',
+            p: 3,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8
+          }}>
+            <Box sx={{ textAlign: 'center', mb: 2 }}>
+              <FaHandshake style={{ fontSize: 48 }} />
+              <Typography variant="h5" component="h2" sx={{ mt: 2 }}>
+                Referral Program
+              </Typography>
+              <Typography variant="subtitle1">
+                Share the opportunity with someone
+              </Typography>
+            </Box>
+
+            <Stepper activeStep={activeStep} alternativeLabel>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
+
+          {/* Form Content */}
+          <Box sx={{ p: 3 }}>
+            {isSubmitting && <LinearProgress sx={{ mb: 2 }} />}
+            
+            {submitError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {submitError}
+              </Alert>
+            )}
+
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              {renderStepContent(activeStep)}
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                <Button
+                  onClick={handleBack}
+                  disabled={activeStep === 0 || isSubmitting}
+                  startIcon={<ArrowBack />}
+                >
+                  Back
+                </Button>
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting}
+                    endIcon={<FaHandshake />}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Referral'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={handleNext}
+                    disabled={isSubmitting}
+                    endIcon={<ArrowForward />}
+                  >
+                    Next
+                  </Button>
+                )}
+              </Box>
+            </form>
+          </Box>
+        </Box>
+      </Dialog>
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={2000}
+        message={successMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+    </ThemeProvider>
   );
 }
 
