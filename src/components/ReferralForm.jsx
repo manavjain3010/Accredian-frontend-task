@@ -32,6 +32,7 @@ import {
   ArrowBack
 } from '@mui/icons-material';
 import { FaHandshake } from 'react-icons/fa';
+// import { red } from '@mui/material/colors';
 
 const theme = createTheme({
   palette: {
@@ -56,6 +57,8 @@ const programs = [
 const steps = ['Referrer Details', 'Referee Details'];
 
 export default function ReferralForm({ onClose }) {
+
+  const serverUrl = import.meta.env.VITE_SERVER_URL;
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     referrerName: '',
@@ -132,7 +135,7 @@ export default function ReferralForm({ onClose }) {
     setSuccessMessage('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/referrals', {
+      const response = await fetch(`${serverUrl}/api/referrals`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -373,8 +376,8 @@ export default function ReferralForm({ onClose }) {
 
             <Stepper activeStep={activeStep} alternativeLabel>
               {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
+                <Step key={label} >
+                  <StepLabel><span style={{color:"white"}}>{label}</span></StepLabel>
                 </Step>
               ))}
             </Stepper>

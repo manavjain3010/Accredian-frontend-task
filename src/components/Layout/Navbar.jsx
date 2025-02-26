@@ -21,9 +21,9 @@ export default function Navbar() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600 text-3xl font-bold">R</span>
+                  <span className="text-blue-600 text-3xl font-bold">A</span>
                   <span className="text-xl font-semibold tracking-wider bg-gradient-to-r from-blue-600 to-blue-400 text-transparent bg-clip-text">
-                    ReferralHub
+                    ccerdian
                   </span>
                 </div>
               </div>
